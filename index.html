@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astronaut Space Experience</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: #111;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 999;
+            background: transparent;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff88;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            z-index: 100;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        .controls-text {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #00ff88;
+            line-height: 1.6;
+        }
+
+        .control-line {
+            margin: 5px 0;
+        }
+
+        #volume-control {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+        }
+
+        input[type="range"] {
+            width: 150px;
+            vertical-align: middle;
+        }
+
+        #photo-count {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            text-align: right;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff88;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00ff88;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.7;
+        }
+
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ff88;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+        }
+
+
+
+        #screenshot-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        #screenshot-btn:hover {
+            background: rgba(0, 255, 136, 0.1);
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        /* Modern UI Panel */
+        #control-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #00ff88;
+            z-index: 100;
+            max-height: 60vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+        }
+
+        .panel-title {
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            padding-bottom: 6px;
+        }
+
+        .control-line {
+            margin: 4px 0;
+            opacity: 0.8;
+        }
+
+        .control-line:hover {
+            opacity: 1;
+            color: #00ffff;
+        }
+
+        /* Floating Prompt */
+        #enter-prompt {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-align: center;
+            display: none;
+            z-index: 95;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        #locations-info {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #00ffff;
+            z-index: 100;
+            max-width: 180px;
+        }
+
+        .location-item {
+            margin: 4px 0;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div id="control-panel">
+        <div class="panel-title">⟹ Controls</div>
+        <div class="control-line">WASD - Move</div>
+        <div class="control-line">Mouse - Look</div>
+        <div class="control-line">SPACE/CTRL - Up/Down</div>
+        <div class="control-line">SHIFT - Sprint</div>
+        <div class="control-line">▶ CLICK PHOTO ◀</div>
+        <div class="control-line">DOUBLE CLICK - Enter</div>
+        <div class="control-line">ESC - Back/Lock</div>
+    </div>
+
+    <div id="locations-info">
+        <div class="panel-title">📍 Current Location</div>
+        <div id="location-name" class="location-item">Space Exploration</div>
+    </div>
+
+    <div id="enter-prompt">
+        ⟳ DOUBLE CLICK to ENTER ⟳
+    </div>
+
+    <div class="crosshair"></div>
+
+    <div id="loading" class="loading">
+        <h2>🚀 Initializing Space...</h2>
+        <p>Loading Three.js Engine</p>
+    </div>
+
+    <button id="screenshot-btn">📷 Screenshot</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        console.log('HTML loaded, waiting for Three.js...');
+        // Show loading message
+        let loadTimeout = setTimeout(() => {
+            if (typeof THREE === 'undefined') {
+                document.getElementById('loading').innerHTML = '<h2 style="color: red;">⚠ Failed to load Three.js</h2><p>Check your internet connection and try again</p>';
+            }
+        }, 3000);
+    </script>
+    <script src="js/main.js"></script>
+</body>
+</html>
